@@ -16,6 +16,8 @@ jobs:
             os: windows-latest
           - platform: macos
             os: macos-latest
+          - platform: linux
+            os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -30,10 +32,21 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
 
+      - name: Build Windows (with installer)
+        if: runner.os == 'Windows'
+        run: wails build -nsis
+
       - name: Build
+        if: runner.os != 'Windows'
         run: wails build
 
       - name: Package macOS app
@@ -41,6 +54,7 @@ jobs:
         run: |
           cd build/bin
           zip -r agent-skill-manager-macos.zip agent-skill-manager.app
+          hdiutil create -volname "Agent Skill Manager" -srcfolder agent-skill-manager.app -ov -format UDZO agent-skill-manager.dmg
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v5
@@ -49,6 +63,8 @@ jobs:
           path: |
             build/bin/*.exe
             build/bin/*.zip
+            build/bin/*.dmg
+            build/bin/*.AppImage
 
   release:
     needs: build
@@ -67,6 +83,6 @@ jobs:
 
       - name: Create Release
         run: |
-          gh release create "${{ github.ref_name }}" artifacts/**/*.zip artifacts/**/*.exe --title "${{ github.ref_name }}" --generate-notes
+          gh release create "${{ github.ref_name }}" artifacts/**/*.exe artifacts/**/*.zip artifacts/**/*.dmg artifacts/**/*.AppImage --title "${{ github.ref_name }}" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
