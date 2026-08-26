@@ -36,6 +36,12 @@ jobs:
       - name: Build
         run: wails build
 
+      - name: Package macOS app
+        if: runner.os == 'macOS'
+        run: |
+          cd build/bin
+          zip -r agent-skill-manager-macos.zip agent-skill-manager.app
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v5
         with:
