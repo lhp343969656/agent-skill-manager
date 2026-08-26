@@ -46,7 +46,9 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: agent-skill-manager-${{ matrix.platform }}
-          path: build/bin/*
+          path: |
+            build/bin/*.exe
+            build/bin/*.zip
 
   release:
     needs: build
@@ -65,6 +67,6 @@ jobs:
 
       - name: Create Release
         run: |
-          gh release create "${{ github.ref_name }}" artifacts/**/* --title "${{ github.ref_name }}" --generate-notes
+          gh release create "${{ github.ref_name }}" artifacts/**/*.zip artifacts/**/*.exe --title "${{ github.ref_name }}" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
