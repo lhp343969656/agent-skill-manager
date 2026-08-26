@@ -16,8 +16,6 @@ jobs:
             os: windows-latest
           - platform: macos
             os: macos-latest
-          - platform: linux
-            os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -31,12 +29,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '20'
-
-      - name: Install Linux dependencies
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
 
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
@@ -64,7 +56,6 @@ jobs:
             build/bin/*.exe
             build/bin/*.zip
             build/bin/*.dmg
-            build/bin/*.AppImage
 
   release:
     needs: build
@@ -83,6 +74,6 @@ jobs:
 
       - name: Create Release
         run: |
-          gh release create "${{ github.ref_name }}" artifacts/**/*.exe artifacts/**/*.zip artifacts/**/*.dmg artifacts/**/*.AppImage --title "${{ github.ref_name }}" --generate-notes
+          gh release create "${{ github.ref_name }}" artifacts/**/*.exe artifacts/**/*.zip artifacts/**/*.dmg --title "${{ github.ref_name }}" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
